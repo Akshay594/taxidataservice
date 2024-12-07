@@ -1,0 +1,15 @@
+pandas
+numpy
+sqlalchemy
+psycopg2-binary
+python-dotenv
+kaggle
+pytz
+fastapi
+graphene
+uvicorn
+pytest
+pytest-cov
+black
+flake8
+isort
