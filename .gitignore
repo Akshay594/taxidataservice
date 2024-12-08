@@ -31,5 +31,5 @@ archive.zip
 .env
 .env.example
 figures/
-data/
+dataset/
 *.json

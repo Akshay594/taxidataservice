@@ -1,70 +1,60 @@
 # src/db/models.py
 
-from sqlalchemy import (
-    Column, Integer, Float, String, DateTime, Boolean,
-    Index, UniqueConstraint, CheckConstraint
-)
-from sqlalchemy.sql import func
-from .database import Base
+from sqlalchemy import Column, Integer, Float, String, DateTime, Boolean, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+from datetime import datetime
+
+Base = declarative_base()
 
 class TaxiTrip(Base):
-    """Taxi trip data model with optimized indexing and constraints."""
-    
+    """
+    Enhanced taxi trip model based on our data analysis.
+    """
     __tablename__ = "taxi_trips"
 
-    # Primary key
     id = Column(Integer, primary_key=True, index=True)
+    vendor_id = Column(String)
     
-    # Raw data fields
-    vendor_id = Column(String(10), nullable=False)
-    pickup_datetime = Column(DateTime(timezone=True), nullable=False)
-    dropoff_datetime = Column(DateTime(timezone=True), nullable=False)
-    passenger_count = Column(Integer, nullable=False)
-    pickup_longitude = Column(Float, nullable=False)
-    pickup_latitude = Column(Float, nullable=False)
-    dropoff_longitude = Column(Float, nullable=False)
-    dropoff_latitude = Column(Float, nullable=False)
-    trip_duration = Column(Integer, nullable=False)  # in seconds
+    # Temporal data
+    pickup_datetime = Column(DateTime, index=True)
+    dropoff_datetime = Column(DateTime)
+    pickup_hour = Column(Integer)
+    pickup_day = Column(String)
+    pickup_month = Column(Integer)
+    is_rush_hour = Column(Boolean)
+    is_weekend = Column(Boolean)
+    time_category = Column(String)
     
-    # Derived features
-    distance = Column(Float, nullable=False)
-    speed = Column(Float, nullable=False)
-    pickup_hour = Column(Integer, nullable=False)
-    pickup_day = Column(String(10), nullable=False)
-    pickup_month = Column(Integer, nullable=False)
-    is_weekend = Column(Boolean, nullable=False)
-    is_rush_hour = Column(Boolean, nullable=False)
-    estimated_fare = Column(Float, nullable=False)
+    # Location data
+    pickup_latitude = Column(Float)
+    pickup_longitude = Column(Float)
+    dropoff_latitude = Column(Float)
+    dropoff_longitude = Column(Float)
+    trip_distance = Column(Float)
+    
+    # Trip details
+    passenger_count = Column(Integer)
+    trip_duration = Column(Integer)  # in seconds
+    average_speed = Column(Float)
     
     # Metadata
-    created_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False
-    )
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Constraints
-    __table_args__ = (
-        # Check constraints
-        CheckConstraint('passenger_count BETWEEN 1 AND 6', name='valid_passenger_count'),
-        CheckConstraint('trip_duration > 0', name='positive_duration'),
-        CheckConstraint('distance > 0', name='positive_distance'),
-        CheckConstraint('speed >= 0', name='non_negative_speed'),
-        CheckConstraint('pickup_hour BETWEEN 0 AND 23', name='valid_hour'),
-        CheckConstraint('pickup_month BETWEEN 1 AND 12', name='valid_month'),
-        CheckConstraint('estimated_fare >= 0', name='non_negative_fare'),
-        
-        # Indexes for common queries
-        Index('ix_taxi_trips_pickup_datetime', 'pickup_datetime'),
-        Index('ix_taxi_trips_dropoff_datetime', 'dropoff_datetime'),
-        Index('ix_taxi_trips_pickup_location', 'pickup_latitude', 'pickup_longitude'),
-        Index('ix_taxi_trips_dropoff_location', 'dropoff_latitude', 'dropoff_longitude'),
-        Index('ix_taxi_trips_trip_stats', 'trip_duration', 'distance', 'speed'),
-        Index('ix_taxi_trips_temporal', 'pickup_hour', 'pickup_day', 'pickup_month'),
-    )
+class TripAggregation(Base):
+    """
+    Pre-calculated aggregations for faster API responses.
+    """
+    __tablename__ = "trip_aggregations"
+
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime, index=True)
+    hour = Column(Integer)
+    total_trips = Column(Integer)
+    average_duration = Column(Float)
+    average_distance = Column(Float)
+    average_passengers = Column(Float)
+    total_passengers = Column(Integer)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)

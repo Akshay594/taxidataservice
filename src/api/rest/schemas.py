@@ -2,39 +2,54 @@
 
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Optional, List
 
-class TaxiTrip(BaseModel):
-    """Taxi trip response schema."""
-    id: int
+class TripBase(BaseModel):
     vendor_id: str
     pickup_datetime: datetime
     dropoff_datetime: datetime
     passenger_count: int
-    pickup_longitude: float
     pickup_latitude: float
-    dropoff_longitude: float
+    pickup_longitude: float
     dropoff_latitude: float
+    dropoff_longitude: float
     trip_duration: int
+
+class TripCreate(TripBase):
+    pass
+
+class TripUpdate(BaseModel):
+    passenger_count: Optional[int] = None
+    trip_duration: Optional[int] = None
+
+class TripResponse(TripBase):
+    id: int
     distance: float
-    speed: float
-    estimated_fare: float
-    is_weekend: bool
+    average_speed: float
     is_rush_hour: bool
-
+    time_category: str
+    created_at: datetime
+    
     class Config:
-        from_attributes = True
+        orm_mode = True
 
-class DailyStats(BaseModel):
-    """Daily statistics response schema."""
+class TripStats(BaseModel):
+    date: datetime
     total_trips: int
-    avg_duration: float = Field(..., description="Average trip duration in seconds")
-    avg_distance: float = Field(..., description="Average trip distance in miles")
-    avg_fare: float = Field(..., description="Average trip fare in USD")
+    average_duration: float
+    average_distance: float
+    average_passengers: float
+    peak_hour: int
+    total_passengers: int
 
-class HourlyStats(BaseModel):
-    """Hourly statistics response schema."""
-    hourly_counts: Dict[int, int] = Field(
-        ..., 
-        description="Trip counts by hour (0-23)"
-    )
+class LocationStats(BaseModel):
+    location: str
+    total_pickups: int
+    total_dropoffs: int
+    average_trip_duration: float
+    popular_hours: List[int]
+    average_fare: float
+
+class DateRangeParams(BaseModel):
+    start_date: datetime
+    end_date: datetime

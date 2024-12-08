@@ -1,20 +1,19 @@
 # src/db/database.py
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import QueuePool
-from ..config.settings import settings
+from contextlib import contextmanager
+from typing import Generator
 import logging
+from src.config.settings import settings
 
-# Initialize logging
 logger = logging.getLogger(__name__)
 
-# Create declarative base instance
-Base = declarative_base()
-
-class Database:
-    """Database connection and session management."""
-    
+class DatabaseManager:
+    """
+    Manages database connections and sessions.
+    """
     def __init__(self):
         self.engine = create_engine(
             settings.DATABASE_URL,
@@ -22,31 +21,48 @@ class Database:
             pool_size=5,
             max_overflow=10,
             pool_timeout=30,
-            pool_recycle=1800,  # Recycle connections after 30 minutes
-            echo=False  # Set to True for SQL query logging
+            pool_recycle=1800  # Recycle connections after 30 minutes
         )
-        self.SessionLocal = sessionmaker(
-            autocommit=False,
-            autoflush=False,
-            bind=self.engine
+        
+        # Create session factory
+        self._session_factory = scoped_session(
+            sessionmaker(
+                autocommit=False,
+                autoflush=False,
+                bind=self.engine
+            )
         )
 
-    def create_tables(self):
-        """Create all tables in the database."""
-        try:
-            Base.metadata.create_all(bind=self.engine)
-            logger.info("Database tables created successfully")
-        except Exception as e:
-            logger.error(f"Error creating database tables: {str(e)}")
-            raise
-
-    def get_session(self):
-        """Get a database session."""
-        session = self.SessionLocal()
+    @contextmanager
+    def get_session(self) -> Generator:
+        """
+        Provide a transactional scope around a series of operations.
+        """
+        session = self._session_factory()
         try:
             yield session
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Database session error: {str(e)}")
+            raise
         finally:
             session.close()
 
-# Create database instance
-db = Database()
+    def init_db(self) -> None:
+        """
+        Initialize database by creating all tables.
+        """
+        from .models import Base
+        Base.metadata.create_all(bind=self.engine)
+        logger.info("Database initialized successfully")
+
+    def dispose(self) -> None:
+        """
+        Dispose of the database engine.
+        """
+        self.engine.dispose()
+        logger.info("Database connections disposed")
+
+# Create a global instance
+db = DatabaseManager()
