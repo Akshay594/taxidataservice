@@ -1,3 +1,6 @@
+aio-pika==9.5.3
+aiormq==6.8.1
+alembic==1.14.0
 annotated-types==0.7.0
 anyio==4.7.0
 black==24.10.0
@@ -8,9 +11,12 @@ click==8.1.7
 contourpy==1.3.1
 coverage==7.6.9
 cycler==0.12.1
+exceptiongroup==1.2.2
 fastapi==0.115.6
 flake8==7.1.1
 fonttools==4.55.2
+geographiclib==2.0
+geopy==2.4.1
 graphene==3.4.3
 graphql-core==3.2.5
 graphql-relay==3.2.0
@@ -20,16 +26,21 @@ iniconfig==2.0.0
 isort==5.13.2
 kaggle==1.6.17
 kiwisolver==1.4.7
+Mako==1.3.8
+MarkupSafe==3.0.2
 matplotlib==3.9.3
 mccabe==0.7.0
+multidict==6.1.0
 mypy-extensions==1.0.0
 numpy==2.1.3
 packaging==24.2
+pamqp==3.3.0
 pandas==2.2.3
 pathspec==0.12.1
 pillow==11.0.0
 platformdirs==4.3.6
 pluggy==1.5.0
+propcache==0.2.1
 psycopg2-binary==2.9.10
 pycodestyle==2.12.1
 pydantic==2.10.3
@@ -60,3 +71,4 @@ tzdata==2024.2
 urllib3==2.2.3
 uvicorn==0.32.1
 webencodings==0.5.1
+yarl==1.18.3
